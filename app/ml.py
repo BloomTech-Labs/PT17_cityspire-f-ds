@@ -387,3 +387,12 @@ async def get_recommendation_cities(city: City, nearest_string: str):
     )
 
     return recs
+
+@router.get("/api/test")
+async def test_endpoint ():
+    """
+    test end point
+    """
+
+    test_greeting = {'greeting':'Hello'}
+    return test_greeting
