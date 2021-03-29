@@ -1,32 +1,17 @@
 [[source]]
-name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
-
-[dev-packages]
-jupyter = "*"
-pytest = "*"
-awsebcli = "*"
+name = "pypi"
 
 [packages]
-fastapi = "*"
-uvicorn = {extras = ["standard"], version = "*"}
+uvicorn = "*"
 sqlalchemy = "*"
+fastapi = "*"
 psycopg2-binary = "*"
-requests = "*"
-bs4 = "*"
-lxml = "*"
-pypika = "*"
-pandas = "*"
-asyncpg = "*"
-databases = {extras = ["postgresql"], version = "*"}
-sklearn = "*"
-plotly = "*"
-gunicorn = "*"
-typing-extensions = "*"
+python-dotenv = "*"
+tensorflow = "*"
+
+[dev-packages]
 
 [requires]
-python_version = "3"
-
-[pipenv]
-allow_prereleases = true
+python_version = "3.7"
