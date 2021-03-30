@@ -89,304 +89,304 @@ def validate_city(
     return city
 
 
-@router.post("/api/get_data", response_model=CityData)
-async def get_data(city: City):
-    """Retrieve all data for city
+# @router.post("/api/get_data", response_model=CityData)
+# async def get_data(city: City):
+#     """Retrieve all data for city
 
-    Fetch data from DB, calculate derived stats, scrape Walkscore
-    return data
+#     Fetch data from DB, calculate derived stats, scrape Walkscore
+#     return data
 
-    args:
-        city: The target city
+#     args:
+#         city: The target city
 
-    returns:
-        Dictionary that contains the requested data, which is converted
-        by fastAPI to a json object.
-    """
+#     returns:
+#         Dictionary that contains the requested data, which is converted
+#         by fastAPI to a json object.
+#     """
 
-    city = validate_city(city)
+#     city = validate_city(city)
 
-    value = await select_all(city)
+#     value = await select_all(city)
 
-    full_data = CityDataFull(city=city, **value)
-    tasks = await asyncio.gather(
-        get_livability_score(city, full_data),
-        get_walkability(city),
-        get_recommendation_cities(city, full_data.nearest_string),
-    )
-    data = {**full_data.dict()}
+#     full_data = CityDataFull(city=city, **value)
+#     tasks = await asyncio.gather(
+#         get_livability_score(city, full_data),
+#         get_walkability(city),
+#         get_recommendation_cities(city, full_data.nearest_string),
+#     )
+#     data = {**full_data.dict()}
 
-    for item in tasks:
-        data.update(item)
+#     for item in tasks:
+#         data.update(item)
 
-    return data
+#     return data
 
 
-@router.post("/api/coordinates")
-async def get_coordinates(city: City):
-    """Retrieve coordinates for target city
+# @router.post("/api/coordinates")
+# async def get_coordinates(city: City):
+#     """Retrieve coordinates for target city
 
-    Fetch data from DB
+#     Fetch data from DB
 
-    args:
-        city: The target city
+#     args:
+#         city: The target city
 
-    returns:
-        Dictionary that contains the requested data, which is converted
-        by fastAPI to a json object.
-    """
-    city = validate_city(city)
-    value = await select(["lat", "lon"], city)
-    return {"latitude": value[0], "longitude": value[1]}
+#     returns:
+#         Dictionary that contains the requested data, which is converted
+#         by fastAPI to a json object.
+#     """
+#     city = validate_city(city)
+#     value = await select(["lat", "lon"], city)
+#     return {"latitude": value[0], "longitude": value[1]}
 
 
-@router.post("/api/crime")
-async def get_crime(city: City):
-    """Retrieve crime rate for target city
+# @router.post("/api/crime")
+# async def get_crime(city: City):
+#     """Retrieve crime rate for target city
 
-    Fetch data from DB
+#     Fetch data from DB
 
-    args:
-        city: The target city
+#     args:
+#         city: The target city
 
-    returns:
-        Dictionary that contains the requested data, which is converted
-        by fastAPI to a json object.
-    """
-    city = validate_city(city)
-    data = Table("data")
-    value = await select("Crime Rating", city)
-    return {"crime": value[0]}
+#     returns:
+#         Dictionary that contains the requested data, which is converted
+#         by fastAPI to a json object.
+#     """
+#     city = validate_city(city)
+#     data = Table("data")
+#     value = await select("Crime Rating", city)
+#     return {"crime": value[0]}
 
 
-@router.post("/api/rental_price")
-async def get_rental_price(city: City):
-    """Retrieve rental price for target city
+# @router.post("/api/rental_price")
+# async def get_rental_price(city: City):
+#     """Retrieve rental price for target city
 
-    Fetch data from DB
+#     Fetch data from DB
 
-    args:
-        city: The target city
+#     args:
+#         city: The target city
 
-    returns:
-        Dictionary that contains the requested data, which is converted
-        by fastAPI to a json object.
-    """
-    city = validate_city(city)
-    value = await select("Rent", city)
-
-    return {"rental_price": value[0]}
-
+#     returns:
+#         Dictionary that contains the requested data, which is converted
+#         by fastAPI to a json object.
+#     """
+#     city = validate_city(city)
+#     value = await select("Rent", city)
+
+#     return {"rental_price": value[0]}
+
 
-@router.post("/api/pollution")
-async def get_pollution(city: City):
-    """Retrieve pollution rating for target city
+# @router.post("/api/pollution")
+# async def get_pollution(city: City):
+#     """Retrieve pollution rating for target city
 
-    Fetch data from DB
+#     Fetch data from DB
 
-    args:
-        city: The target city
+#     args:
+#         city: The target city
 
-    returns:
-        Dictionary that contains the requested data, which is converted
-        by fastAPI to a json object.
-    """
-    city = validate_city(city)
-    value = await select("Air Quality Index", city)
-    return {"air_quality_index": value[0]}
-
-
-@router.post("/api/walkability")
-async def get_walkability(city: City):
-    """Retrieve walkscore for target city
-
-    args:
-        city: The target city
-
-    returns:
-        Dictionary that contains the requested data, which is converted
-        by fastAPI to a json object.
-    """
-    city = validate_city(city)
-    try:
-        score = (await get_walkscore(**city.dict()))[0]
-    except IndexError:
-        raise HTTPException(
-            status_code=422, detail=f"Walkscore not found for {city.city}, {city.state}"
-        )
-
-    return {"walkability": score}
-
-
-async def get_walkscore(city: str, state: str):
-    """Scrape Walkscore.
-
-    args:
-        city: The target city
-        state: Target state as an all-caps 2-letter abbr
-
-    returns:
-        List containing WalkScore, BusScore, and BikeScore in that order
-    """
-
-    r_ = requests.get(f"https://www.walkscore.com/{state}/{city}")
-    images = bs(r_.text, features="lxml").select(".block-header-badge img")
-    return [int(str(x)[10:12]) for x in images]
-
-
-@router.post("/api/livability")
-async def get_livability(city: City, weights: LivabilityWeights = None):
-    """Calculate livability score
-
-    Fetch data from DB, calculate derived stats, scrape Walkscore
-    return data
-
-    args:
-        city: The target city
-        LivabilityWeights: Weights for the to use for calculation
-
-    returns:
-        Dictionary that contains the requested data, which is converted
-        by fastAPI to a json object.
-    """
-    city = validate_city(city)
-    values = await select(["Rent", "Good Days", "Crime Rate per 1000"], city)
-    with open("app/livability_scaler.pkl", "rb") as f:
-        s = load(f)
-    v = [[values[0] * -1, values[1], values[2] * -1]]
-    scaled = s.transform(v)[0]
-    walkscore = await get_walkscore(city.city, city.state)
-    diversity_index = await select("Diversity Index", city)
+#     returns:
+#         Dictionary that contains the requested data, which is converted
+#         by fastAPI to a json object.
+#     """
+#     city = validate_city(city)
+#     value = await select("Air Quality Index", city)
+#     return {"air_quality_index": value[0]}
+
+
+# @router.post("/api/walkability")
+# async def get_walkability(city: City):
+#     """Retrieve walkscore for target city
+
+#     args:
+#         city: The target city
+
+#     returns:
+#         Dictionary that contains the requested data, which is converted
+#         by fastAPI to a json object.
+#     """
+#     city = validate_city(city)
+#     try:
+#         score = (await get_walkscore(**city.dict()))[0]
+#     except IndexError:
+#         raise HTTPException(
+#             status_code=422, detail=f"Walkscore not found for {city.city}, {city.state}"
+#         )
+
+#     return {"walkability": score}
+
+
+# async def get_walkscore(city: str, state: str):
+#     """Scrape Walkscore.
+
+#     args:
+#         city: The target city
+#         state: Target state as an all-caps 2-letter abbr
+
+#     returns:
+#         List containing WalkScore, BusScore, and BikeScore in that order
+#     """
+
+#     r_ = requests.get(f"https://www.walkscore.com/{state}/{city}")
+#     images = bs(r_.text, features="lxml").select(".block-header-badge img")
+#     return [int(str(x)[10:12]) for x in images]
+
+
+# @router.post("/api/livability")
+# async def get_livability(city: City, weights: LivabilityWeights = None):
+#     """Calculate livability score
+
+#     Fetch data from DB, calculate derived stats, scrape Walkscore
+#     return data
+
+#     args:
+#         city: The target city
+#         LivabilityWeights: Weights for the to use for calculation
+
+#     returns:
+#         Dictionary that contains the requested data, which is converted
+#         by fastAPI to a json object.
+#     """
+#     city = validate_city(city)
+#     values = await select(["Rent", "Good Days", "Crime Rate per 1000"], city)
+#     with open("app/livability_scaler.pkl", "rb") as f:
+#         s = load(f)
+#     v = [[values[0] * -1, values[1], values[2] * -1]]
+#     scaled = s.transform(v)[0]
+#     walkscore = await get_walkscore(city.city, city.state)
+#     diversity_index = await select("Diversity Index", city)
 
-    rescaled = [walkscore[0]]
-    rescaled.append(round(diversity_index[0]) * 100)
-    for score in scaled:
-        rescaled.append(score * 100)
-    # breakpoint()
-    if weights is None:
-        return {"livability": round(sum(rescaled) / 5)}
-    else:
-        weighted = [
-            rescaled[0] * weights.walkability,
-            rescaled[1] * weights.diversity,
-            rescaled[2] * weights.low_rent,
-            rescaled[3] * weights.low_pollution,
-            rescaled[4] * weights.low_crime,
-        ]
+#     rescaled = [walkscore[0]]
+#     rescaled.append(round(diversity_index[0]) * 100)
+#     for score in scaled:
+#         rescaled.append(score * 100)
+#     # breakpoint()
+#     if weights is None:
+#         return {"livability": round(sum(rescaled) / 5)}
+#     else:
+#         weighted = [
+#             rescaled[0] * weights.walkability,
+#             rescaled[1] * weights.diversity,
+#             rescaled[2] * weights.low_rent,
+#             rescaled[3] * weights.low_pollution,
+#             rescaled[4] * weights.low_crime,
+#         ]
 
-        sum_ = sum(weighted)
-        divisor = sum(weights.dict().values())
+#         sum_ = sum(weighted)
+#         divisor = sum(weights.dict().values())
 
-        return {"livability": round(sum_ / divisor)}
+#         return {"livability": round(sum_ / divisor)}
 
 
-async def get_livability_score(city: City, city_data: CityDataFull):
-    """Calculate livability score
+# async def get_livability_score(city: City, city_data: CityDataFull):
+#     """Calculate livability score
 
-    Fetch data from DB, calculate derived stats, scrape Walkscore
-    return data
+#     Fetch data from DB, calculate derived stats, scrape Walkscore
+#     return data
 
-    args:
-        city: The target city
+#     args:
+#         city: The target city
 
 
-    returns:
-        Dictionary that contains the requested data, which is converted
-            by fastAPI to a json object.
-    """
+#     returns:
+#         Dictionary that contains the requested data, which is converted
+#             by fastAPI to a json object.
+#     """
 
-    with open("app/livability_scaler.pkl", "rb") as f:
-        s = load(f)
-    v = [
-        [
-            city_data.rental_price * -1,
-            city_data.good_days,
-            city_data.crime_rate_ppt * -1,
-        ]
-    ]
-    scaled = s.transform(v)[0]
-    walkscore = await get_walkscore(city.city, city.state)
+#     with open("app/livability_scaler.pkl", "rb") as f:
+#         s = load(f)
+#     v = [
+#         [
+#             city_data.rental_price * -1,
+#             city_data.good_days,
+#             city_data.crime_rate_ppt * -1,
+#         ]
+#     ]
+#     scaled = s.transform(v)[0]
+#     walkscore = await get_walkscore(city.city, city.state)
 
-    rescaled = [walkscore[0], city_data.diversity_index]
-    for score in scaled:
-        rescaled.append(score * 100)
+#     rescaled = [walkscore[0], city_data.diversity_index]
+#     for score in scaled:
+#         rescaled.append(score * 100)
 
-    return {"livability": round(sum(rescaled) / 5)}
+#     return {"livability": round(sum(rescaled) / 5)}
 
 
-@router.post("/api/population")
-async def get_population(city: City):
-    """Retrieve population rating for target city
+# @router.post("/api/population")
+# async def get_population(city: City):
+#     """Retrieve population rating for target city
 
-    Fetch data from DB
+#     Fetch data from DB
 
-    args:
-        city: The target city
+#     args:
+#         city: The target city
 
-    returns:
-        Dictionary that contains the requested data, which is converted
-            by fastAPI to a json object.
-    """
+#     returns:
+#         Dictionary that contains the requested data, which is converted
+#             by fastAPI to a json object.
+#     """
 
-    city = validate_city(city)
-    value = await select("Population", city)
-    return {"population": value[0]}
+#     city = validate_city(city)
+#     value = await select("Population", city)
+#     return {"population": value[0]}
 
 
-@router.post("/api/nearest", response_model=CityRecommendations)
-async def get_recommendations(city: City):
-    """Retrieve recommended cities for target city
+# @router.post("/api/nearest", response_model=CityRecommendations)
+# async def get_recommendations(city: City):
+#     """Retrieve recommended cities for target city
 
-    Fetch data from DB
+#     Fetch data from DB
 
-    args:
-        city: The target city
+#     args:
+#         city: The target city
 
-    returns:
-        Dictionary that contains the requested data, which is converted
-            by fastAPI to a json object.
-    """
+#     returns:
+#         Dictionary that contains the requested data, which is converted
+#             by fastAPI to a json object.
+#     """
 
-    city = validate_city(city)
-    value = await select("Nearest", city)
+#     city = validate_city(city)
+#     value = await select("Nearest", city)
 
-    recommendations = await get_recommendation_cities(city, value.get("Nearest"))
+#     recommendations = await get_recommendation_cities(city, value.get("Nearest"))
 
-    return recommendations
+#     return recommendations
 
 
-async def get_recommendation_cities(city: City, nearest_string: str):
-    """Use the string and transform to City
+# async def get_recommendation_cities(city: City, nearest_string: str):
+#     """Use the string and transform to City
 
-    Fetch data from DB
+#     Fetch data from DB
 
-    args:
-        nearest_string: String consisting of the index numbers of the recommended cities.
+#     args:
+#         nearest_string: String consisting of the index numbers of the recommended cities.
 
-    returns:
-        Dictionary that contains the requested data, which is converted
-            by fastAPI to a json object.
-    """
+#     returns:
+#         Dictionary that contains the requested data, which is converted
+#             by fastAPI to a json object.
+#     """
 
-    test_list = nearest_string.split(",")
+#     test_list = nearest_string.split(",")
 
-    data = Table("data")
-    q2 = (
-        Query.from_(data)
-        .select(data["City"])
-        .select(data["State"])
-        .where(data.index)
-        .isin(test_list)
-    )
+#     data = Table("data")
+#     q2 = (
+#         Query.from_(data)
+#         .select(data["City"])
+#         .select(data["State"])
+#         .where(data.index)
+#         .isin(test_list)
+#     )
 
-    recommendations = await database.fetch_all(str(q2))
-    recs = CityRecommendations(
-        recommendations=[
-            City(city=item["City"], state=item["State"]) for item in recommendations
-        ]
-    )
+#     recommendations = await database.fetch_all(str(q2))
+#     recs = CityRecommendations(
+#         recommendations=[
+#             City(city=item["City"], state=item["State"]) for item in recommendations
+#         ]
+#     )
 
-    return recs
+#     return recs
 
 @router.get("/api/test")
 async def test_endpoint ():
@@ -394,5 +394,5 @@ async def test_endpoint ():
     test end point
     """
 
-    test_greeting = {'greeting':'Hello'}
+    test_greeting = {'greeting':'Hello, fellow students'}
     return test_greeting

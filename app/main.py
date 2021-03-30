@@ -23,9 +23,9 @@ app = FastAPI(
     docs_url="/",
 )
 
-app.include_router(db.router, tags=["Database"])
+# app.include_router(db.router, tags=["Database"])
 app.include_router(ml.router, tags=["Machine Learning"])
-app.include_router(viz.router, tags=["Visualization"])
+# app.include_router(viz.router, tags=["Visualization"])
 
 app.add_middleware(
     CORSMiddleware,
