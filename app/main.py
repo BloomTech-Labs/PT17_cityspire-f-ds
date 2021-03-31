@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-from app import db, ml, viz
+from app import db, ml, viz, messages
 
 description = """
 MISSION: Be a one-stop resource for users to receive the most accurate city information.
@@ -18,14 +18,15 @@ Use data to find a place right for you to live.
 """
 
 app = FastAPI(
-    title="CITYSPIRE API",
-    description=description,
+    title="CITYSPIRE LabsPT17 Adi Version",
+    description="Guided Project Version",
     docs_url="/",
 )
 
 app.include_router(db.router, tags=["Database"])
 app.include_router(ml.router, tags=["Machine Learning"])
 app.include_router(viz.router, tags=["Visualization"])
+app.include_router(messages.router, tags=['Friendly Messages'])
 
 app.add_middleware(
     CORSMiddleware,
