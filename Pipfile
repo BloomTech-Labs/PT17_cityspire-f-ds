@@ -10,7 +10,6 @@ awsebcli = "*"
 
 [packages]
 fastapi = "*"
-uvicorn = {extras = ["standard"], version = "*"}
 sqlalchemy = "*"
 psycopg2-binary = "*"
 requests = "*"
@@ -19,7 +18,6 @@ lxml = "*"
 pypika = "*"
 pandas = "*"
 asyncpg = "*"
-databases = {extras = ["postgresql"], version = "*"}
 sklearn = "*"
 plotly = "*"
 gunicorn = "*"
@@ -30,3 +28,11 @@ python_version = "3"
 
 [pipenv]
 allow_prereleases = true
+
+[packages.uvicorn]
+extras = [ "standard",]
+version = "*"
+
+[packages.databases]
+extras = [ "postgresql",]
+version = "*"
