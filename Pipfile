@@ -26,6 +26,7 @@ typing-extensions = "*"
 uszipcode = "*"
 openpyxl = "*"
 seaborn = "*"
+matplotlib = "*"
 
 [requires]
 python_version = "3"
