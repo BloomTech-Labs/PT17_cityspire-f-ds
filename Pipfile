@@ -28,6 +28,10 @@ openpyxl = "*"
 seaborn = "*"
 matplotlib = "*"
 tensorflow = "*"
+scikit-learn = "*"
+plotly-express = "*"
+pandas-profiling = "*"
+category-encoders = "*"
 
 [requires]
 python_version = "3"
