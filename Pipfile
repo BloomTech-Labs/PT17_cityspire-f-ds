@@ -27,6 +27,7 @@ uszipcode = "*"
 openpyxl = "*"
 seaborn = "*"
 matplotlib = "*"
+tensorflow = "*"
 
 [requires]
 python_version = "3"
