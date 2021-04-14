@@ -397,3 +397,12 @@ async def test_endpoint ():
     test_greeting = {'greeting':'Hello, fellow students'}
     return test_greeting
 
+@router.get("/api/api_headache")
+async def test_endpoint ():
+    """
+    test end point
+    """
+
+    test_greeting = {'greeting': "Don't forget your env variables."}
+    return test_greeting
+
