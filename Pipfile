@@ -32,6 +32,7 @@ scikit-learn = "*"
 plotly-express = "*"
 pandas-profiling = "*"
 category-encoders = "*"
+eli5 = "*"
 
 [requires]
 python_version = "3"
