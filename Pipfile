@@ -10,20 +10,29 @@ awsebcli = "*"
 
 [packages]
 fastapi = "*"
-uvicorn = {extras = ["standard"], version = "*"}
+uvicorn = {extras = ["standard"],version = "*"}
 sqlalchemy = "*"
-psycopg2-binary = "*"
 requests = "*"
 bs4 = "*"
 lxml = "*"
 pypika = "*"
 pandas = "*"
 asyncpg = "*"
-databases = {extras = ["postgresql"], version = "*"}
+databases = {extras = ["postgresql"],version = "*"}
 sklearn = "*"
 plotly = "*"
 gunicorn = "*"
 typing-extensions = "*"
+uszipcode = "*"
+openpyxl = "*"
+seaborn = "*"
+matplotlib = "*"
+tensorflow = "*"
+scikit-learn = "*"
+plotly-express = "*"
+pandas-profiling = "*"
+category-encoders = "*"
+eli5 = "*"
 
 [requires]
 python_version = "3"
