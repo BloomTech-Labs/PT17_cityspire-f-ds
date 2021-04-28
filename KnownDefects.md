@@ -1,0 +1,1 @@
+1. Deployment to AWS was very difficult, but we finally got it worked out when configuring the .env file. Make sure you create your postgres and connect it properly in the .env file, otherwise you're likely to get a 502 error in your AWS deployment. -- We spent nearly 3 weeks trying to get this worked out (even the instructors were stumped for a while). Don't repeat our mistake.
